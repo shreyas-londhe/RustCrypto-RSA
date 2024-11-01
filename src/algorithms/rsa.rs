@@ -95,11 +95,11 @@ fn mul_u2048(a_array: U2048, b_array: U2048) -> U4096 {
     let a_words = a_array.to_words();
 
     for i in 0..8 {
-        let chunk = a_words[i*8..(i+1)*8].try_into().unwrap();
+        let chunk = a_words[i*4..(i+1)*4].try_into().unwrap();
         let a_chunk: U256 = U256::from_words(chunk);
-        let mut prod = mul_array(a_chunk, b_array);
-        let mut shifted_words = [0u32; 128];
-        shifted_words[i*8..].copy_from_slice(&prod.to_words()[..(128 - 8*i)]);
+        let prod = mul_array(a_chunk, b_array);
+        let mut shifted_words = [0u64; 64];
+        shifted_words[i*4..].copy_from_slice(&prod.to_words()[..(64 - 4*i)]);
         let shifted_prod = U4096::from_words(shifted_words);
         sum = sum.wrapping_add(&shifted_prod);
     }
@@ -109,7 +109,7 @@ fn mul_u2048(a_array: U2048, b_array: U2048) -> U4096 {
 
 /// Performs multiplication of `a` a U256 and `b` which is a U2048.
 fn mul_array(a: U256, b_array: U2048) -> U4096 {
-    let mut result_words = [0u32; 128];
+    let mut result_words = [0u64; 64];
     let result_ptr = result_words.as_mut_ptr();
     unsafe {
         sp1_lib::syscall_u256x2048_mul(
